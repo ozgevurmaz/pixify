@@ -1,57 +1,45 @@
 import { fonts } from "@/lib/constants/font";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { text } from "stream/consumers";
 
 export interface initialStateTypes {
-    isDarkMode: boolean;
-    planType: 'free' | 'premium';
-    tokens: number;
     text: string;
     font: Font;
     fontSize: number;
-    activeTab: 'post' | 'story' | 'reel';
-    isUploading: boolean;
     textColor: string;
+
+    activeTab: 'post' | 'story' | 'reel';
+    template: 'minimal' | 'gradient' | 'photo';
     bgColor: string;
     bgColor2: string;
     percentage: string;
     percentage2: string;
     angle: number;
+    url: string;
+
+    isUploading: boolean;
 }
 
 const initialState = {
-    isDarkMode: false,
-    planType: 'free',
-    tokens: 2,
     text: "",
     font: fonts[0],
     fontSize: 30,
-    activeTab: 'post',
-    isUploading: false,
     textColor: '#000000',
+    activeTab: 'post',
+    template: 'minimal',
     bgColor: '#fff',
     bgColor2: '#fff',
     percentage: '0',
     percentage2: '100',
     angle: 90,
+    url: "https://images.unsplash.com/photo-1736246633159-bc8735d6c63b?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    isUploading: false
+
 };
 
-export const uiSlice = createSlice({
-    name: "ui",
+export const postSlice = createSlice({
+    name: "post",
     initialState,
     reducers: {
-        toggleDarkMode: (state) => {
-            state.isDarkMode = !state.isDarkMode;
-        },
-        setPlanType: (state, action: PayloadAction<'free' | 'premium'>) => {
-            state.planType = action.payload;
-        },
-        tokenIncrement: (state, action: PayloadAction<number>) => {
-            state.tokens += action.payload;
-        },
-        tokenDecrement: (state, action: PayloadAction<number>) => {
-            state.tokens -= action.payload;
-        },
         setText: (state, action: PayloadAction<string>) => {
             state.text = action.payload;
         },
@@ -61,14 +49,14 @@ export const uiSlice = createSlice({
         setFontSize: (state, action) => {
             state.fontSize = action.payload;
         },
+        setTextColor: (state, action) => {
+            state.textColor = action.payload;
+        },
         setActiveTab: (state, action) => {
             state.activeTab = action.payload;
         },
-        setIsUploading: (state, action) => {
-            state.isUploading = action.payload;
-        },
-        setTextColor: (state, action) => {
-            state.textColor = action.payload;
+        setTemplate: (state, action) => {
+            state.template = action.payload;
         },
         setBgColor: (state, action) => {
             state.bgColor = action.payload;
@@ -85,26 +73,28 @@ export const uiSlice = createSlice({
         setAngle: (state, action) => {
             state.angle = action.payload;
         },
+        setIsUploading: (state, action) => {
+            state.isUploading = action.payload;
+        },
         resetState: () => initialState,
     },
 });
 
-export const { 
-    toggleDarkMode,
-    setPlanType, 
-    tokenIncrement,
-    tokenDecrement,
+export const {
     setText,
     setFont,
     setFontSize,
     setActiveTab,
-    setIsUploading,
+    setTemplate,
     setTextColor,
     setBgColor,
     setBgColor2,
     setPercentage,
     setPercentage2,
-    setAngle } = uiSlice.actions;
+    setAngle,
+    resetState,
+    setIsUploading
+} = postSlice.actions;
 
 
-export default uiSlice.reducer;
+export default postSlice.reducer;

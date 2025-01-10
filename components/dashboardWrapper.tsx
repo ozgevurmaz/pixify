@@ -2,14 +2,13 @@
 
 import React, { useEffect } from 'react'
 
-import { Provider, useDispatch, useSelector } from 'react-redux';
-import store, { persistor, RootState }  from '@/store/store';
+import { Provider, useSelector } from 'react-redux';
+import store, { persistor, RootState } from '@/store/store';
 import { PersistGate } from 'redux-persist/integration/react';
 
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
-    const dispatch = useDispatch();
-    const isDarkMode = useSelector((state: RootState) => state.ui.isDarkMode);
+    const isDarkMode = useSelector((state: RootState) => state.user.isDarkMode);
 
 
     useEffect(() => {
