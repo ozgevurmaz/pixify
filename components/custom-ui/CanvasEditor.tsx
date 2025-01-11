@@ -5,8 +5,6 @@ import * as fabric from 'fabric';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 
-
-
 const CanvasEditor: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
@@ -33,7 +31,9 @@ const CanvasEditor: React.FC = () => {
     }
 
     // Clear background color and image
-    canvas.backgroundColor = '';
+    canvas.set('backgroundColor', '');
+    canvas.set('backgroundImage', null);
+    canvas.renderAll();
 
 
     if (template.name === "gradients") {
@@ -50,8 +50,8 @@ const CanvasEditor: React.FC = () => {
           y2: height * Math.sin(radians),
         },
         colorStops: [
-          { offset: percentage / 100, color: bgColor },    // Convert percentage to decimal
-          { offset: percentage2 / 100, color: bgColor2 }
+          { offset: Number(percentage) / 100, color: bgColor },
+          { offset: Number(percentage2) / 100, color: bgColor2 }
         ],
       });
 
@@ -66,28 +66,47 @@ const CanvasEditor: React.FC = () => {
       canvas.add(backgroundRectRef.current);
       canvas.sendObjectToBack(backgroundRectRef.current);
 
-    } else if (template.name === "photo") {
+    }
+    else if (template.name === "photo") {
 
-      fabric.Image.fromURL(url, (img) => {
-        const canvasWidth = canvas.getWidth();
-        const canvasHeight = canvas.getHeight();
+      if (!fabricCanvasRef.current) {
+        console.error("Canvas not initialized");
+        return;
+      }
 
-        // Scale image to cover canvas while maintaining aspect ratio
+      const canvas = fabricCanvasRef.current;
+      const canvasWidth = canvas.getWidth();
+      const canvasHeight = canvas.getHeight();
+
+      fabric.FabricImage.fromURL(url).then((img) => {
+        if (!img) {
+          console.error("Image object is null");
+          return;
+        }
+
         const scaleX = canvasWidth / img.width!;
         const scaleY = canvasHeight / img.height!;
         const scale = Math.max(scaleX, scaleY);
 
-        img.set({
-          scaleX: scale,
-          scaleY: scale,
-          left: (canvasWidth - img.width! * scale) / 2,
-          top: (canvasHeight - img.height! * scale) / 2,
-          selectable: false,
-          evented: false,
-        });
+        try {
+          img.set({
+            scaleX: scale,
+            scaleY: scale,
+            left: (canvasWidth - img.width! * scale) / 2,
+            top: (canvasHeight - img.height! * scale) / 2,
+            selectable: false,
+            evented: false,
+          });
 
-        canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+          canvas.set('backgroundImage', img);
+          canvas.renderAll();
+        } catch (error) {
+          console.error("Error setting image properties:", error);
+        }
+      }).catch((error) => {
+        console.error("Error loading image:", error);
       });
+
 
     } else {
       canvas.backgroundColor = bgColor;
@@ -128,7 +147,7 @@ const CanvasEditor: React.FC = () => {
         originY: 'center',
         padding: 1,
         fontFamily: font.name,
-        fontSize: parseInt(fontSize),
+        fontSize: fontSize,
         fill: textColor,
         textAlign: 'center',
         width: width * 0.8,
@@ -177,7 +196,7 @@ const CanvasEditor: React.FC = () => {
       textObject.set({
         text: text,
         fontFamily: font.name,
-        fontSize: parseInt(fontSize),
+        fontSize: fontSize,
         fill: textColor,
         left,
         top,

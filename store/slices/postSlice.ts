@@ -1,4 +1,5 @@
 import { fonts } from "@/lib/constants/font";
+import { templates } from "@/lib/constants/template";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface initialStateTypes {
@@ -8,11 +9,11 @@ export interface initialStateTypes {
     textColor: string;
 
     activeTab: 'post' | 'story' | 'reel';
-    template: 'minimal' | 'gradient' | 'photo';
+    template: Template;
     bgColor: string;
     bgColor2: string;
-    percentage: string;
-    percentage2: string;
+    percentage: number;
+    percentage2: number;
     angle: number;
     url: string;
 
@@ -25,13 +26,13 @@ const initialState = {
     fontSize: 30,
     textColor: '#000000',
     activeTab: 'post',
-    template: 'minimal',
+    template: templates[0],
     bgColor: '#fff',
     bgColor2: '#fff',
     percentage: '0',
     percentage2: '100',
     angle: 90,
-    url: "https://images.unsplash.com/photo-1736246633159-bc8735d6c63b?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    url: "https://images.pexels.com/photos/30159434/pexels-photo-30159434/free-photo-of-seyh-zayed-camii-ndeki-karmasik-cicek-desenleri.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
     isUploading: false
 
 };

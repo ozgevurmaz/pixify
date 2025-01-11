@@ -230,7 +230,7 @@ export default function Home() {
                         {templates.map(t => (
                           <SelectItem
                             key={t.id}
-                            value={t.id}
+                            value={String(t.id)}
                             disabled={t.premium && currentPlan === 'free'}
                           >
                             {t.name} {t.premium && ' (Premium)'}
@@ -330,7 +330,7 @@ export default function Home() {
                           <Input
                             type="number"
                             min="0"
-                            max="99"
+                            max="100"
                             value={percentage2}
                             onChange={(e) => dispatch(setPercentage2(e.target.value))}
                             className="border p-2 rounded min-w bg-secondary"
@@ -360,7 +360,7 @@ export default function Home() {
                         {fonts.map(f => (
                           <SelectItem
                             key={f.id}
-                            value={f.id}
+                            value={String(f.id)}
                             disabled={f.premium && currentPlan === 'free'}
                             className={`${f.class}`}
                           >
