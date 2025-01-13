@@ -25,6 +25,7 @@ const initialState = {
     font: fonts[0],
     fontSize: 30,
     textColor: '#000000',
+
     activeTab: 'post',
     template: templates[0],
     bgColor: '#fff',
@@ -32,7 +33,7 @@ const initialState = {
     percentage: '0',
     percentage2: '100',
     angle: 90,
-    url: "https://images.pexels.com/photos/30159434/pexels-photo-30159434/free-photo-of-seyh-zayed-camii-ndeki-karmasik-cicek-desenleri.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+    url: "https://images.pexels.com/photos/586687/pexels-photo-586687.jpeg?auto=compress&cs=tinysrgb&w=600",
     isUploading: false
 
 };

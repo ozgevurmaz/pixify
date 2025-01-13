@@ -1,11 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { SketchPicker } from 'react-color'
-
-import { Card, CardContent } from '@/components/ui/card'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
+
 import {
   RefreshCw,
   Download,
@@ -13,13 +10,7 @@ import {
   Atom,
   Moon
 } from 'lucide-react'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
+
 import {
   Dialog,
   DialogContent,
@@ -29,16 +20,15 @@ import {
   DialogTrigger
 } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
-import { fonts } from '@/lib/constants/font'
-import { Input } from '@/components/ui/input'
 
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '@/store/store'
 import UploadButton from '@/components/custom-ui/uploadButton'
 import ContentTabs from '@/components/custom-ui/contentTabs'
-import { templates } from '@/lib/constants/template'
+
 import { setPlanType, toggleDarkMode, tokenDecrement, tokenIncrement } from '@/store/slices/userSlice'
-import { resetState, setAngle, setBgColor, setBgColor2, setFont, setFontSize, setPercentage, setPercentage2, setTemplate, setText, setTextColor } from '@/store/slices/postSlice'
+import { resetState } from '@/store/slices/postSlice'
+import ContentForm from '@/components/custom-ui/contentForm'
 
 export default function Home() {
 
@@ -62,9 +52,6 @@ export default function Home() {
   const [isUploading, setIsUploading] = useState<boolean>(false)
   const [isGenerated, setIsGenerated] = useState<boolean>(false)
 
-  const [isColorPickerOpen, setIsColorPickerOpen] = useState<boolean>(false)
-  const [isColorPickerOpen2, setIsColorPickerOpen2] = useState<boolean>(false)
-  const [isColorPickerOpen3, setIsColorPickerOpen3] = useState<boolean>(false)
 
   const handleGenerate = () => {
     if (tokens <= 0 && currentPlan === 'free') {
@@ -188,250 +175,25 @@ export default function Home() {
           </Dialog>
         </div>
 
-        <div className='grid md:grid-cols-2 gap-8'>
+        <div className='grid xl:grid-cols-2 gap-8'>
+          {/* Interactions */}
           <div className='space-y-6'>
             {/* Adding data from excel */}
             <UploadButton />
 
-
-            {/* Form area for content information */}
-            <Card className='bg-primary'>
-              <CardContent className='pt-6'>
-                <Textarea
-                  placeholder='Enter your text here...'
-                  className='min-h-[100px] bg-secondary'
-                  value={text}
-                  onChange={e => dispatch(setText(e.target.value))}
-                />
-
-                <div className='grid grid-cols-3 gap-4 mt-4'>
-
-                  {/* Template Section */}
-
-                  <div>
-                    <label className='text-sm font-medium mb-2 block'>
-                      Template
-                    </label>
-                    <Select
-                      onValueChange={id => {
-                        const selectedTemplate = templates.find(t => t.id === Number(id))
-                        if (
-                          selectedTemplate &&
-                          (!selectedTemplate.premium || currentPlan === 'premium')
-                        ) {
-                          dispatch(setTemplate(selectedTemplate));
-                        }
-                      }}
-                    >
-                      <SelectTrigger className='bg-secondary'>
-                        <SelectValue placeholder='Select template' />
-                      </SelectTrigger>
-                      <SelectContent className='bg-secondary'>
-                        {templates.map(t => (
-                          <SelectItem
-                            key={t.id}
-                            value={String(t.id)}
-                            disabled={t.premium && currentPlan === 'free'}
-                          >
-                            {t.name} {t.premium && ' (Premium)'}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Angle section for gradient */}
-
-                  {template.name === "gradients" &&
-                    <div >
-                      <label className="text-sm font-medium mb-2 block">Gradient Angle</label>
-                      <Input
-                        type="number"
-                        value={angle}
-                        onChange={(e) => dispatch(setAngle(Number(e.target.value)))}
-                        className="w-full border p-2 rounded bg-secondary"
-                      />
-                    </div>}
-
-                  {/* BACKGROUND COLOR */}
-
-                  <div className='flex gap-3 items-end'>
-                    <div className='flex flex-col relative'>
-                      <label className='text-sm font-medium mb-2 block'>
-                        {template.name === "gradients" ? "Frist Color" : "Background Color"}
-                      </label>
-                      <Button
-                        onClick={() => setIsColorPickerOpen2(!isColorPickerOpen2)}
-                        style={{ backgroundColor: bgColor }}
-                        className='w-full h-[40px] border hover:scale-105'
-                      >
-                        {bgColor}
-                      </Button>
-
-                      {isColorPickerOpen2 && (
-                        <div className='absolute z-50 -bottom-80'>
-                          <SketchPicker
-                            color={bgColor}
-                            onChangeComplete={color => {
-                              dispatch(setBgColor(color.hex))
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {
-                      /* First colors percentage */
-                      template.name === "gradients" &&
-                      <div className='flex gap-1 items-end'>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="99"
-                          value={percentage}
-                          onChange={(e) => dispatch(setPercentage(e.target.value))}
-                          className="border p-2 rounded min-w bg-secondary"
-                        /><label className="text-xl font-medium mb-2 block">%</label>
-                      </div>
-                    }
-
-                  </div>
-
-                  <div className='flex gap-3 items-end'>
-                    {
-                      /* End Color and percentage for gradient */
-                      template.name === "gradients" &&
-                      <>
-                        <div className='flex flex-col relative'>
-                          <label className='text-sm font-medium mb-2 block'>
-                            Second Color
-                          </label>
-                          <Button
-                            onClick={() => setIsColorPickerOpen3(!isColorPickerOpen3)}
-                            style={{ backgroundColor: bgColor2 }}
-                            className='w-full h-[40px] border hover:scale-105'
-                          >
-                            {bgColor2}
-                          </Button>
-                          {isColorPickerOpen3 && (
-                            <div className='absolute z-50 -bottom-80'>
-                              <SketchPicker
-                                color={bgColor2}
-                                onChangeComplete={color => {
-                                  dispatch(setBgColor2(color.hex))
-                                }}
-                              />
-                            </div>
-                          )}
-
-                        </div>
-
-                        <div className='flex gap-1 items-end'>
-                          <Input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={percentage2}
-                            onChange={(e) => dispatch(setPercentage2(e.target.value))}
-                            className="border p-2 rounded min-w bg-secondary"
-                          /><label className="text-xl font-medium mb-2 block">%</label>
-                        </div></>}
-                  </div>
-
-                  {/* FONT TYPE */}
-                  <div>
-                    <label className='text-sm font-medium mb-2 block'>Font</label>
-                    <Select
-
-                      onValueChange={id => {
-                        const selectedFont = fonts.find(f => f.id === Number(id))
-                        if (
-                          selectedFont &&
-                          (!selectedFont.premium || currentPlan === 'premium')
-                        ) {
-                          dispatch(setFont(selectedFont))
-                        }
-                      }}
-                    >
-                      <SelectTrigger className='bg-secondary'>
-                        <SelectValue placeholder='Select font' />
-                      </SelectTrigger>
-                      <SelectContent className='bg-secondary'>
-                        {fonts.map(f => (
-                          <SelectItem
-                            key={f.id}
-                            value={String(f.id)}
-                            disabled={f.premium && currentPlan === 'free'}
-                            className={`${f.class}`}
-                          >
-                            {f.name} {f.premium && ' (Premium)'}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* FONT SIZE */}
-                  <div>
-                    <label className='text-sm font-medium mb-2 block'>
-                      Font Size
-                    </label>
-                    <Select
-                      onValueChange={(value) => dispatch(setFontSize(Number(value)))}
-                      defaultValue="30"
-                    >
-                      <SelectTrigger className='bg-secondary'>
-                        <SelectValue placeholder='Select size' />
-                      </SelectTrigger>
-                      <SelectContent className='bg-secondary'>
-                        {Array.from(
-                          { length: 45 - 20 + 1 },
-                          (_, i) => 20 + i
-                        ).map(size => (
-                          <SelectItem key={size} value={String(size)}>
-                            {size}px
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* TEXT COLOR */}
-                  <div>
-                    <label className='text-sm font-medium mb-2 block'>
-                      Text Color
-                    </label>
-                    <button
-                      onClick={() => setIsColorPickerOpen(!isColorPickerOpen)}
-                      style={{ color: textColor }}
-                      className='w-full h-[40px] border bg-secondary hover:scale-105 rounded-md'
-                    >
-                      {textColor}
-                    </button>
-                    {isColorPickerOpen && (
-                      <div className='absolute z-50'>
-                        <SketchPicker
-                          color={textColor}
-                          onChangeComplete={color => {
-                            dispatch(setTextColor(color.hex))
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <ContentForm />
 
             <div className='flex gap-2'>
               {/* Generate Button */}
-              <Button
-                className='flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
-                onClick={handleGenerate}
-              >
-                <Atom className='w-4 h-4 mr-2' />
-                {isGenerated && template.name === "photo" ? "Try a New Generate" : "New Generate"}
-              </Button>
+              {
+                template.name === "photo" &&
+                <Button
+                  className='flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
+                  onClick={handleGenerate}
+                >
+                  <Atom className='w-4 h-4 mr-2' />
+                  {isGenerated && template.name === "photo" ? "Try a New Generate" : "New Generate"}
+                </Button>}
               {/* Download Button */}
               <Button
                 className='flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'

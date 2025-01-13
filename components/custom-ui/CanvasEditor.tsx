@@ -78,35 +78,37 @@ const CanvasEditor: React.FC = () => {
       const canvasWidth = canvas.getWidth();
       const canvasHeight = canvas.getHeight();
 
-      fabric.FabricImage.fromURL(url).then((img) => {
-        if (!img) {
-          console.error("Image object is null");
-          return;
-        }
 
-        const scaleX = canvasWidth / img.width!;
-        const scaleY = canvasHeight / img.height!;
-        const scale = Math.max(scaleX, scaleY);
+        fabric.FabricImage.fromURL(url).then((img) => {
+          if (!img) {
+            console.error("Image object is null");
+            return;
+          }
 
-        try {
-          img.set({
-            scaleX: scale,
-            scaleY: scale,
-            left: (canvasWidth - img.width! * scale) / 2,
-            top: (canvasHeight - img.height! * scale) / 2,
-            selectable: false,
-            evented: false,
-          });
+          const scaleX = canvasWidth / img.width!;
+          const scaleY = canvasHeight / img.height!;
+          const scale = Math.max(scaleX, scaleY);
 
-          canvas.set('backgroundImage', img);
-          canvas.renderAll();
-        } catch (error) {
-          console.error("Error setting image properties:", error);
-        }
-      }).catch((error) => {
-        console.error("Error loading image:", error);
-      });
+          try {
+            img.set({
+              scaleX: scale,
+              scaleY: scale,
+              left: (canvasWidth - img.width! * scale) / 2,
+              top: (canvasHeight - img.height! * scale) / 2,
+              selectable: false,
+              evented: false,
+            });
 
+            canvas.set('backgroundImage', img);
+            canvas.renderAll();
+          } catch (error) {
+            console.error("Error setting image properties:", error);
+          }
+
+
+        }).catch((error) => {
+          console.error("Error loading image:", error);
+        });
 
     } else {
       canvas.backgroundColor = bgColor;
@@ -216,7 +218,7 @@ const CanvasEditor: React.FC = () => {
     if (!fabricCanvasRef.current) return;
     updateBackground(fabricCanvasRef.current);
 
-  }, [template, bgColor, bgColor2, angle, url, percentage, percentage2]);
+  }, [template, bgColor, bgColor2, angle, url, percentage, percentage2, activeTab]);
 
   return (
     <div className={`relative ${activeTab === 'post' ? 'w-full' : 'w-3/5 mx-auto'
