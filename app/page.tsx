@@ -27,8 +27,10 @@ import UploadButton from '@/components/custom-ui/uploadButton'
 import ContentTabs from '@/components/custom-ui/contentTabs'
 
 import { setPlanType, toggleDarkMode, tokenDecrement, tokenIncrement } from '@/store/slices/userSlice'
-import { resetState } from '@/store/slices/postSlice'
+import { resetState, setUrl } from '@/store/slices/postSlice'
 import ContentForm from '@/components/custom-ui/contentForm'
+import axios from 'axios'
+import { NextResponse } from 'next/server'
 
 export default function Home() {
 
@@ -38,22 +40,30 @@ export default function Home() {
 
   const text = useSelector((state: RootState) => state.post.text)
   const template = useSelector((state: RootState) => state.post.template)
-  const font = useSelector((state: RootState) => state.post.font)
-  const bgColor = useSelector((state: RootState) => state.post.bgColor)
-  const textColor = useSelector((state: RootState) => state.post.textColor)
-  const fontSize = useSelector((state: RootState) => state.post.fontSize)
+  const dimensions = useSelector((state: RootState) => state.post.dimensions)
   const activeTab = useSelector((state: RootState) => state.post.activeTab)
-  const bgColor2 = useSelector((state: RootState) => state.post.bgColor2)
-  const angle = useSelector((state: RootState) => state.post.angle)
-  const percentage = useSelector((state: RootState) => state.post.percentage)
-  const percentage2 = useSelector((state: RootState) => state.post.percentage2)
+  const url = useSelector((state: RootState) => state.post.url)
 
-
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const [isUploading, setIsUploading] = useState<boolean>(false)
   const [isGenerated, setIsGenerated] = useState<boolean>(false)
 
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+
+    console.log('Initial image url:', url);
+
+    if (!text) return;
+
+    if (text.length > 100) {
+      toast({
+        title: 'Text Too Long',
+        description: `For Instagram ${activeTab}, the content text should be 100 characters or fewer.`,
+        variant: 'destructive'
+      });
+      return;
+    }
+
     if (tokens <= 0 && currentPlan === 'free') {
       toast({
         title: 'No tokens remaining',
@@ -67,7 +77,44 @@ export default function Home() {
       dispatch(tokenDecrement(1))
     }
 
-    // Generating logic here
+    setIsLoading(true)
+
+   try {
+    const response = await fetch('/api/findImage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        text: text,
+        format : activeTab,
+        dimensions: dimensions
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) throw new Error(data.message);
+    
+    dispatch(setUrl(data));
+    console.log('API Response Data:', data);
+    console.log('Image url:', url);
+
+    setIsLoading(false);
+   } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const statusCode = error.response?.status || 500;
+      const errorMessage = error.response?.data?.error?.message || error.message;
+
+      return NextResponse.json(
+        { message: "API request failed", error: errorMessage },
+        { status: statusCode }
+      );
+    }
+  
+    return NextResponse.json(
+      { message: "An unexpected error occurred." },
+      { status: 500 }
+    );
+   }
 
     setIsGenerated(true)
     toast({

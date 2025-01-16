@@ -1,14 +1,23 @@
 "use client"
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as fabric from 'fabric';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
+import { setDimensions } from '@/store/slices/postSlice';
+
+declare module "fabric" {
+  interface Canvas {
+    createTextObject?: () => void;
+  }
+}
 
 const CanvasEditor: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
   const backgroundRectRef = useRef<fabric.Rect | null>(null);
+
+  const dispatch = useDispatch();
 
   const activeTab = useSelector((state: RootState) => state.post.activeTab);
   const text = useSelector((state: RootState) => state.post.text);
@@ -22,6 +31,8 @@ const CanvasEditor: React.FC = () => {
   const percentage = useSelector((state: RootState) => state.post.percentage);
   const percentage2 = useSelector((state: RootState) => state.post.percentage2);
   const url = useSelector((state: RootState) => state.post.url);
+  const dimension = useSelector((state: RootState) => state.post.dimensions);
+
 
   // Function to update background
   const updateBackground = (canvas: fabric.Canvas) => {
@@ -35,11 +46,19 @@ const CanvasEditor: React.FC = () => {
     canvas.set('backgroundImage', null);
     canvas.renderAll();
 
+    const width = canvas.getWidth();
+    const height = canvas.getHeight();
+    const newAspectRatio = activeTab === 'post' ? "square" : "portrait";
+
+    dispatch(setDimensions({
+      width: width,
+      height: height,
+      aspectRatio: newAspectRatio, 
+      maxChars: 100
+  }))
 
     if (template.name === "gradients") {
       const radians = (angle * Math.PI) / 180;
-      const width = canvas.getWidth();
-      const height = canvas.getHeight();
 
       const gradient = new fabric.Gradient({
         type: 'linear',
@@ -79,36 +98,36 @@ const CanvasEditor: React.FC = () => {
       const canvasHeight = canvas.getHeight();
 
 
-        fabric.FabricImage.fromURL(url).then((img) => {
-          if (!img) {
-            console.error("Image object is null");
-            return;
-          }
+      fabric.FabricImage.fromURL(url).then((img) => {
+        if (!img) {
+          console.error("Image object is null");
+          return;
+        }
 
-          const scaleX = canvasWidth / img.width!;
-          const scaleY = canvasHeight / img.height!;
-          const scale = Math.max(scaleX, scaleY);
+        const scaleX = canvasWidth / img.width!;
+        const scaleY = canvasHeight / img.height!;
+        const scale = Math.max(scaleX, scaleY);
 
-          try {
-            img.set({
-              scaleX: scale,
-              scaleY: scale,
-              left: (canvasWidth - img.width! * scale) / 2,
-              top: (canvasHeight - img.height! * scale) / 2,
-              selectable: false,
-              evented: false,
-            });
+        try {
+          img.set({
+            scaleX: scale,
+            scaleY: scale,
+            left: (canvasWidth - img.width! * scale) / 2,
+            top: (canvasHeight - img.height! * scale) / 2,
+            selectable: false,
+            evented: false,
+          });
 
-            canvas.set('backgroundImage', img);
-            canvas.renderAll();
-          } catch (error) {
-            console.error("Error setting image properties:", error);
-          }
+          canvas.set('backgroundImage', img);
+          canvas.renderAll();
+        } catch (error) {
+          console.error("Error setting image properties:", error);
+        }
 
 
-        }).catch((error) => {
-          console.error("Error loading image:", error);
-        });
+      }).catch((error) => {
+        console.error("Error loading image:", error);
+      });
 
     } else {
       canvas.backgroundColor = bgColor;

@@ -16,8 +16,16 @@ export interface initialStateTypes {
     percentage2: number;
     angle: number;
     url: string;
+    dimensions: Dimensions;
 
     isUploading: boolean;
+}
+
+interface Dimensions {
+    width: number;
+    height: number;
+    aspectRatio: "square" | "portrait";
+    maxChars: number;
 }
 
 const initialState = {
@@ -34,8 +42,15 @@ const initialState = {
     percentage2: '100',
     angle: 90,
     url: "https://images.pexels.com/photos/586687/pexels-photo-586687.jpeg?auto=compress&cs=tinysrgb&w=600",
-    isUploading: false
 
+    dimensions: {
+        width: 604,
+        height: 604,
+        aspectRatio: "square",
+        maxChars: 100,
+    },
+
+    isUploading: false
 };
 
 export const postSlice = createSlice({
@@ -75,8 +90,14 @@ export const postSlice = createSlice({
         setAngle: (state, action) => {
             state.angle = action.payload;
         },
+        setUrl: (state, action) => {
+            state.url = action.payload;
+        },
         setIsUploading: (state, action) => {
             state.isUploading = action.payload;
+        },
+        setDimensions: (state, action) => {
+            state.dimensions = action.payload;
         },
         resetState: () => initialState,
     },
@@ -95,7 +116,9 @@ export const {
     setPercentage2,
     setAngle,
     resetState,
-    setIsUploading
+    setUrl,
+    setIsUploading,
+    setDimensions
 } = postSlice.actions;
 
 
