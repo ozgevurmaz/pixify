@@ -1,10 +1,10 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import * as fabric from 'fabric';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
-import { setDimensions } from '@/store/slices/postSlice';
+import { setDimensions, setTextColor } from '@/store/slices/postSlice';
 
 declare module "fabric" {
   interface Canvas {
@@ -12,7 +12,11 @@ declare module "fabric" {
   }
 }
 
-const CanvasEditor: React.FC = () => {
+interface CanvasEditorHandle {
+  getCanvas: () => fabric.Canvas | null;
+}
+
+const CanvasEditor = forwardRef<CanvasEditorHandle>((_, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
   const backgroundRectRef = useRef<fabric.Rect | null>(null);
@@ -34,12 +38,25 @@ const CanvasEditor: React.FC = () => {
   const dimension = useSelector((state: RootState) => state.post.dimensions);
 
 
+  const getContrastingTextColor = (hexColor: string): string => {
+    // HEX to RGB
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+
+    // Calculate Brightness
+    const brightness = r * 0.299 + g * 0.587 + b * 0.114;
+
+    return brightness > 128 ? "#000000" : "#FFFFFF";
+  };
+
   // Function to update background
   const updateBackground = (canvas: fabric.Canvas) => {
     if (backgroundRectRef.current) {
       canvas.remove(backgroundRectRef.current);
       backgroundRectRef.current = null;
     }
+
 
     // Clear background color and image
     canvas.set('backgroundColor', '');
@@ -53,9 +70,9 @@ const CanvasEditor: React.FC = () => {
     dispatch(setDimensions({
       width: width,
       height: height,
-      aspectRatio: newAspectRatio, 
+      aspectRatio: newAspectRatio,
       maxChars: 100
-  }))
+    }))
 
     if (template.name === "gradients") {
       const radians = (angle * Math.PI) / 180;
@@ -239,12 +256,20 @@ const CanvasEditor: React.FC = () => {
 
   }, [template, bgColor, bgColor2, angle, url, percentage, percentage2, activeTab]);
 
+  useEffect(() => {
+    dispatch(setTextColor(getContrastingTextColor(bgColor)));
+  }, [bgColor, url])
+
+  useImperativeHandle(ref, () => ({
+    getCanvas: () => fabricCanvasRef.current,
+  }));
+
   return (
     <div className={`relative ${activeTab === 'post' ? 'w-full' : 'w-3/5 mx-auto'
       }`}>
       <canvas ref={canvasRef} className="w-full h-full" />
     </div>
   );
-};
+});
 
 export default CanvasEditor;

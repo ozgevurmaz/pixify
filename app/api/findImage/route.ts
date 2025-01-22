@@ -6,7 +6,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export const POST = async (req: NextRequest) =>{
 
-  const { text, format, dimensions } = await req.json();
+  const { text, format, dimensions, color } = await req.json();
 
   if (!text || !format || !dimensions) {
     return new NextResponse("Not enough data to create a product", {
@@ -39,7 +39,7 @@ export const POST = async (req: NextRequest) =>{
           },
         ],
         max_tokens: 10,
-        temperature: 0.3,
+        temperature: 0.7,
       },
       {
         headers: {
@@ -56,6 +56,7 @@ export const POST = async (req: NextRequest) =>{
         status: 400,
       });
     }
+    console.log(theme)
 
     // Get a suitable background image
     const pexelsResponse = await axios.get(
@@ -73,7 +74,7 @@ export const POST = async (req: NextRequest) =>{
       }
     );
 
-    const result = pexelsResponse.data.photos[0].src[`${format === 'post' ? 'large' : 'portrait'}`];
+    const result = pexelsResponse.data.photos[0];
 
     if (!result || result.length === 0) {
       return new NextResponse(`No suitable background found for theme: ${theme}`, { status: 404 })

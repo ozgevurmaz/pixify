@@ -1,14 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
-
+import * as fabric from 'fabric';
 import {
   RefreshCw,
   Download,
   Coins,
   Atom,
-  Moon
+  Moon,
+  Instagram,
+  ImageIcon,
+  Type
 } from 'lucide-react'
 
 import {
@@ -24,15 +27,19 @@ import { toast } from '@/hooks/use-toast'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '@/store/store'
 import UploadButton from '@/components/custom-ui/uploadButton'
-import ContentTabs from '@/components/custom-ui/contentTabs'
 
 import { setPlanType, toggleDarkMode, tokenDecrement, tokenIncrement } from '@/store/slices/userSlice'
-import { resetState, setUrl } from '@/store/slices/postSlice'
+import { resetState, setActiveTab, setBgColor, setUrl } from '@/store/slices/postSlice'
 import ContentForm from '@/components/custom-ui/contentForm'
 import axios from 'axios'
 import { NextResponse } from 'next/server'
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import CanvasEditor from '@/components/custom-ui/CanvasEditor';
+
+
 export default function Home() {
+  const canvasRef = useRef<{ getCanvas: () => fabric.Canvas | null }>(null);
 
   const dispatch = useDispatch();
   const currentPlan = useSelector((state: RootState) => state.user.planType)
@@ -43,6 +50,7 @@ export default function Home() {
   const dimensions = useSelector((state: RootState) => state.post.dimensions)
   const activeTab = useSelector((state: RootState) => state.post.activeTab)
   const url = useSelector((state: RootState) => state.post.url)
+  const color = useSelector((state: RootState) => state.post.bgColor)
 
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [isUploading, setIsUploading] = useState<boolean>(false)
@@ -79,42 +87,44 @@ export default function Home() {
 
     setIsLoading(true)
 
-   try {
-    const response = await fetch('/api/findImage', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        text: text,
-        format : activeTab,
-        dimensions: dimensions
-      })
-    });
+    try {
+      const response = await fetch('/api/findImage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: text,
+          format: activeTab,
+          dimensions: dimensions,
+          color: color
+        })
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) throw new Error(data.message);
-    
-    dispatch(setUrl(data));
-    console.log('API Response Data:', data);
-    console.log('Image url:', url);
+      if (!response.ok) throw new Error(data.message);
 
-    setIsLoading(false);
-   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const statusCode = error.response?.status || 500;
-      const errorMessage = error.response?.data?.error?.message || error.message;
+      dispatch(setUrl(data.src[`${template.name === 'post' ? 'large' : 'portrait'}`]));
+      dispatch(setBgColor(data.avg_color));
+      console.log(data);
+
+      setIsLoading(false);
+
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const statusCode = error.response?.status || 500;
+        const errorMessage = error.response?.data?.error?.message || error.message;
+
+        return NextResponse.json(
+          { message: "API request failed", error: errorMessage },
+          { status: statusCode }
+        );
+      }
 
       return NextResponse.json(
-        { message: "API request failed", error: errorMessage },
-        { status: statusCode }
+        { message: "An unexpected error occurred." },
+        { status: 500 }
       );
     }
-  
-    return NextResponse.json(
-      { message: "An unexpected error occurred." },
-      { status: 500 }
-    );
-   }
 
     setIsGenerated(true)
     toast({
@@ -137,7 +147,34 @@ export default function Home() {
       dispatch(tokenDecrement(1))
     }
 
-    // Download logic here
+    // Get the canvas instance through the ref
+    const canvas = canvasRef.current?.getCanvas();
+    if (!canvas) {
+      toast({
+        title: 'Error',
+        description: 'Canvas not found',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Convert canvas to data URL
+    const dataURL = canvas.toDataURL({
+      format: 'png',
+      quality: 1,
+      multiplier: 2
+    });
+
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.href = dataURL;
+    link.download = `pixify-${activeTab}-${new Date().getTime()}.png`; // Better filename
+
+    // Programmatically click the link to trigger download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
     toast({
       title: 'Download started',
       description: 'Your content is being prepared for download'
@@ -173,6 +210,18 @@ export default function Home() {
       setIsUploading(false)
     }
   }
+
+  useEffect(() => {
+    // Initialize canvas
+    if (!canvasRef.current) {
+      canvasRef.current = new fabric.Canvas('canvas', {
+        width: 800,
+        height: 600,
+      });
+    }
+
+    // Your canvas initialization code here...
+  }, []);
 
   return (
     <div className='w-full h-screen bg-background'>
@@ -260,7 +309,38 @@ export default function Home() {
           </div>
 
           {/* Tabs for content */}
-          <ContentTabs />
+          <Tabs
+            defaultValue={activeTab}
+            className='w-full h-[70vh]'
+            onValueChange={value => dispatch(setActiveTab(value))}
+          >
+            <TabsList className='grid w-full grid-cols-3'>
+              <TabsTrigger value='post'>
+                <Instagram className='w-4 h-4 mr-2' />
+                Post
+              </TabsTrigger>
+              <TabsTrigger value='story'>
+                <ImageIcon className='w-4 h-4 mr-2' />
+                Story
+              </TabsTrigger>
+              <TabsTrigger value='reel'>
+                <Type className='w-4 h-4 mr-2' />
+                Reel
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value='post'>
+              <CanvasEditor ref={canvasRef} />
+            </TabsContent>
+
+            <TabsContent value='story'>
+              <CanvasEditor ref={canvasRef} />
+            </TabsContent>
+
+            <TabsContent value='reel'>
+              <CanvasEditor ref={canvasRef} />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

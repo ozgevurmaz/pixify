@@ -198,7 +198,7 @@ const ContentForm = () => {
 
 
                                 </div>
-                            </div> : template.name === "minimal" ?
+                            </div> : 
 
                                 <div className='flex gap-3 items-end'>
                                     <div className='flex flex-col relative'>
@@ -226,8 +226,7 @@ const ContentForm = () => {
                                     </div>
 
                                 </div>
-                                :
-                                <div></div>
+                        
 
                     }
 

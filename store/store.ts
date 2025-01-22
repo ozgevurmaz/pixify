@@ -4,10 +4,12 @@ import storage from 'redux-persist/lib/storage';
 import { combineReducers } from 'redux';
 import postReducer from './slices/postSlice';
 import userReducer from './slices/userSlice';
+import canvasReducer from './slices/canvasSlice';
 
 const rootReducer = combineReducers({
   post: postReducer,
   user: userReducer,
+  canvas: canvasReducer,
 });
 
 const persistConfig = {
